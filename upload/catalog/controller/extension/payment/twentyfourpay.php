@@ -68,6 +68,16 @@ class ControllerExtensionPaymentTwentyfourpay extends Controller {
       $data['Cart'] = $this->get_cart_json_base64();
     }
 
+    $data['directApplePay'] = false;
+    if ($this->config->get('payment_twentyfourpay_direct_apple_pay')){
+      $data['directApplePay'] = true;
+    }
+
+    $data['directGooglePay'] = false;
+    if ($this->config->get('payment_twentyfourpay_direct_google_pay')){
+      $data['directGooglePay'] = true;
+    }
+
     return $this->load->view('extension/payment/twentyfourpay', $data);
   }
 

@@ -36,6 +36,12 @@
 
   <div class="buttons">
     <div class="pull-right">
+          {% if directApplePay == true %}
+            <input type="submit" value="Apple Pay" id="button-confirm9" class="btn btn-primary" formaction="{{ action }}9"/>
+          {% endif %}
+          {% if directGooglePay == true %}
+            <input type="submit" value="Google Pay" id="button-confirm8" class="btn btn-primary" formaction="{{ action }}8"/>
+          {% endif %}
       <input type="submit" value="{{ button_confirm }}" id="button-confirm" class="btn btn-primary"/>
     </div>
   </div>

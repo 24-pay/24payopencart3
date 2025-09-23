@@ -42,6 +42,12 @@ $_['save_transaction_email_on'] = 'Send';
 $_['cart'] = 'Include cart & shipping, required only for the pay later payment method';
 $_['cart_on'] = 'Include';
 
+$_['direct_google_pay']     = 'Show direct Google Pay payment option';
+$_['direct_google_pay_on']  = 'Show';
+
+$_['direct_apple_pay']      = 'Show direct Apple Pay payment option';
+$_['direct_apple_pay_on']   = 'Show';
+
 // Error
 $_['error_permission']      = 'Warning: You do not have permission to modify the payment module!';
 $_['error_mid']             = 'Merchant Identificator (MID) is required!';

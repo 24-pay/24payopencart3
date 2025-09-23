@@ -41,6 +41,12 @@ $_['save_transaction_email_on'] = 'Poslať';
 $_['cart'] = 'Zahrnúť Košík a doprava, povinné iba v prípade platobnej metódy na splátky';
 $_['cart_on'] = 'Zahrnúť';
 
+$_['direct_google_pay']     = 'Zobraziť možnosť priamej platby cez Google Pay';
+$_['direct_google_pay_on']  = 'Zobraziť';
+
+$_['direct_apple_pay']      = 'Zobraziť možnosť priamej platby cez Apple Pay';
+$_['direct_apple_pay_on']   = 'Zobraziť';
+
 // Error
 $_['error_permission']      = 'Warning: You do not have permission to modify the payment module!';
 $_['error_mid'] = 'Parameter MID je povinný!';
