@@ -26,6 +26,14 @@
     <input type="hidden" name="NotifyClient" value="{{ NotifyClient }}" />
   {% endif %}
 
+  {% if saveTransactionEmail == true %}
+    <input type="hidden" name="SaveTransactionEmail" value="{{ SaveTransactionEmail }}" />
+  {% endif %}
+
+  {% if cart == true %}
+    <input type="hidden" name="Cart" value="{{ Cart }}" />
+  {% endif %}
+
   <div class="buttons">
     <div class="pull-right">
       <input type="submit" value="{{ button_confirm }}" id="button-confirm" class="btn btn-primary"/>

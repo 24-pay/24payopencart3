@@ -36,6 +36,12 @@ $_['receive_email']         = 'Receive';
 $_['notify_client']         = 'Send payment status email to client';
 $_['notify_client_on']      = 'Send';
 
+$_['save_transaction_email'] = 'Send offline payment link in case of no response or declined payment';
+$_['save_transaction_email_on'] = 'Send';
+
+$_['cart'] = 'Include cart & shipping, required only for the pay later payment method';
+$_['cart_on'] = 'Include';
+
 // Error
 $_['error_permission']      = 'Warning: You do not have permission to modify the payment module!';
 $_['error_mid']             = 'Merchant Identificator (MID) is required!';

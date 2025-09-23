@@ -57,6 +57,17 @@ class ControllerExtensionPaymentTwentyfourpay extends Controller {
       $data['clientNotify'] = true;
       $data['NotifyClient'] = $formData['customer']['email'];
     }
+
+    if ($this->config->get('payment_twentyfourpay_save_transaction_email')) {
+      $data['saveTransactionEmail'] = true;
+      $data['SaveTransactionEmail'] = $formData['customer']['email'];
+    }
+
+    if ($this->config->get('payment_twentyfourpay_cart')) {
+      $data['cart'] = true;
+      $data['Cart'] = $this->get_cart_json_base64();
+    }
+
     return $this->load->view('extension/payment/twentyfourpay', $data);
   }
 
@@ -300,4 +311,63 @@ class ControllerExtensionPaymentTwentyfourpay extends Controller {
     $lang = strtolower($lang);
     return $lang;
   }
+
+    public function get_cart_json_base64() {
+        if (isset($this->session->data['order_id'])) {
+            $order_id = $this->session->data['order_id'];
+        } else {
+            return null;
+        }
+
+        $this->load->model('checkout/order');
+
+        $order_info = $this->model_checkout_order->getOrder($order_id);
+
+        if (!$order_info) {
+            return null;
+        }
+
+        $deliveryName  = isset($order_info['shipping_method']) ? $order_info['shipping_method'] : '';
+        $deliveryPrice = 0;
+
+        // Get delivery price from totals (more reliable than shipping_cost)
+        $this->load->model('account/order');
+        $totals = $this->model_account_order->getOrderTotals($order_id);
+
+        foreach ($totals as $total) {
+            if ($total['code'] === 'shipping') {
+                $deliveryPrice = $this->currency->convert(
+                    $total['value'],
+                    $this->config->get('config_currency'),
+                    $order_info['currency_code']
+                );
+            }
+        }
+
+        $order_products = $this->model_checkout_order->getOrderProducts($order_id);
+        $items = [];
+
+        foreach ($order_products as $product) {
+            $itemPrice = $this->currency->convert(
+                $product['price'],
+                $this->config->get('config_currency'),
+                $order_info['currency_code']
+            );
+
+            $items[] = [
+                'itemName'        => $product['name'],
+                'itemDescription' => '', // OpenCart order doesn't store description
+                'quantity'        => $product['quantity'],
+                'itemPrice'       => number_format($itemPrice, 2, '.', ''),
+            ];
+        }
+
+        $data = [
+            'deliveryName'  => $deliveryName,
+            'deliveryPrice' => number_format((float)$deliveryPrice, 2, '.', ''),
+            'items'         => $items,
+        ];
+
+        return base64_encode(json_encode($data, JSON_UNESCAPED_UNICODE));
+    }
 }

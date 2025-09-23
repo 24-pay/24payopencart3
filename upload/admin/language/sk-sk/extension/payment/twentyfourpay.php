@@ -33,7 +33,13 @@ $_['notification_email']    = 'Chcete dostávať notifikačný email o platbe z 
 $_['receive_email']         = 'áno chcem na nižšie uvedený email';
 
 $_['notify_client']         = 'Chcete posielat klientovi notifikačný email o stave platby z 24-pay';
-$_['notify_client_on']      = 'áno chcem';
+$_['notify_client_on']      = 'Áno chcem';
+
+$_['save_transaction_email'] = 'Poslať mail s offline linkom na platbu v prípade platby bez odpovede alebo zamietnutej platby.';
+$_['save_transaction_email_on'] = 'Poslať';
+
+$_['cart'] = 'Zahrnúť Košík a doprava, povinné iba v prípade platobnej metódy na splátky';
+$_['cart_on'] = 'Zahrnúť';
 
 // Error
 $_['error_permission']      = 'Warning: You do not have permission to modify the payment module!';
