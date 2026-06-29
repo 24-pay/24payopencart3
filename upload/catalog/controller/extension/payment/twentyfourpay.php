@@ -42,7 +42,13 @@ class ControllerExtensionPaymentTwentyfourpay extends Controller {
     $data['MsTxnId'] = $formData['order']['mstxnid'];
     $data['Amount'] = $formData['order']['amount'];
     $data['CurrAlphaCode'] = $formData['order']['currency'];
-    $data['ClientId'] = $formData['customer']['id'];
+    $clientId = (string)$formData['customer']['id'];
+
+      if (strlen($clientId) < 3) {
+          $clientId = str_pad($clientId, 3, '0', STR_PAD_LEFT);
+      }
+
+    $data['ClientId'] = $clientId;
     $data['FirstName'] = $formData['customer']['firstname'];
     $data['FamilyName'] = $formData['customer']['familyname'];
     $data['Email'] = $formData['customer']['email'];
@@ -153,10 +159,10 @@ class ControllerExtensionPaymentTwentyfourpay extends Controller {
     $mid = $data['config']['mid'];
     $key = $data['config']['key'];
 
-    $hash = hash("sha1", $message, true);
+  	$hash = hash("sha1", $message, true);
   	$iv = $mid . strrev($mid);
 
-  	$key = pack('H*', $key);
+  	$key = $this->normalizeEncryptionKey($key);
 
   	if ( PHP_VERSION_ID >= 50303 && extension_loaded( 'openssl' ) ) {
   		$crypted = openssl_encrypt( $hash, 'AES-256-CBC', $key, 1, $iv );
@@ -304,7 +310,7 @@ class ControllerExtensionPaymentTwentyfourpay extends Controller {
         $hash = hash("sha1", $message, true);
         $iv = $mid . strrev($mid);
 
-        $key = pack('H*', $key);
+        $key = $this->normalizeEncryptionKey($key);
 
         if ( PHP_VERSION_ID >= 50303 && extension_loaded( 'openssl' ) ) {
                 $crypted = openssl_encrypt( $hash, 'AES-256-CBC', $key, 1, $iv );
@@ -314,6 +320,21 @@ class ControllerExtensionPaymentTwentyfourpay extends Controller {
         $sign = strtoupper(bin2hex(substr($crypted, 0, 16)));
 
         return $sign;
+  }
+
+  private function normalizeEncryptionKey($key){
+        $key = trim($key);
+
+        // Accept common hex-key formatting (spaces/dashes) without triggering pack() warnings.
+        $hexKey = preg_replace('/[\s\-:]/', '', $key);
+        if ($hexKey !== '' && preg_match('/^[0-9a-fA-F]+$/', $hexKey)) {
+                if ((strlen($hexKey) % 2) !== 0) {
+                        $hexKey = '0' . $hexKey;
+                }
+                return pack('H*', $hexKey);
+        }
+
+        return $key;
   }
 
   private function _language($lang_id) {
