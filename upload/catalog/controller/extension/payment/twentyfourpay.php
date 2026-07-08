@@ -177,8 +177,10 @@ class ControllerExtensionPaymentTwentyfourpay extends Controller {
   //RURL
   public function rurl() {
 
-    if (isset($this->session->data['order_id'])) {
-      $order_id = $this->session->data['order_id'];
+    if (isset($this->request->get["MsTxnId"])) {
+      $order_id = (int)$this->request->get["MsTxnId"];
+    } elseif (isset($this->session->data['order_id'])) {
+      $order_id = (int)$this->session->data['order_id'];
     } else {
       $order_id = 0;
     }
@@ -186,11 +188,28 @@ class ControllerExtensionPaymentTwentyfourpay extends Controller {
     $this->load->model('checkout/order');
     $order_info = $this->model_checkout_order->getOrder($order_id);
 
-    $get_order_id = $this->request->get["MsTxnId"];
+    $get_order_id = isset($this->request->get["MsTxnId"]) ? (int)$this->request->get["MsTxnId"] : 0;
 
-    $total = $this->request->get["Amount"];
-    $currency_code = $this->request->get["CurrCode"];
-    $result = $this->request->get["Result"];
+    $total = isset($this->request->get["Amount"]) ? $this->request->get["Amount"] : '';
+    $currency_code = isset($this->request->get["CurrCode"]) ? $this->request->get["CurrCode"] : '';
+    $result = isset($this->request->get["Result"]) ? $this->request->get["Result"] : '';
+
+    // Fallback status update for flows where server-to-server notification is delayed or unavailable.
+    if ($order_info && $get_order_id === (int)$order_info['order_id']) {
+      if ((int)$order_info['order_status_id'] === 0) {
+        switch ($result) {
+          case "PENDING":
+            $this->model_checkout_order->addOrderHistory($order_id, $this->config->get('payment_twentyfourpay_pending_status_id'), "Processor message: PENDING (RURL fallback)", false);
+          break;
+          case "OK":
+            $this->model_checkout_order->addOrderHistory($order_id, $this->config->get('payment_twentyfourpay_completed_status_id'), "Processor message: OK (RURL fallback)", false);
+          break;
+          case "FAIL":
+            $this->model_checkout_order->addOrderHistory($order_id, $this->config->get('payment_twentyfourpay_failed_status_id'), "Processor message: FAIL (RURL fallback)", false);
+          break;
+        }
+      }
+    }
 
     switch ($result) {
         case "OK":
@@ -209,18 +228,27 @@ class ControllerExtensionPaymentTwentyfourpay extends Controller {
   //NURL
   public function nurl() {
 
-    if (isset($_POST["params"])) {
-        $params = $_POST["params"];
+    $params = null;
+
+    if (isset($this->request->post["params"])) {
+        $params = $this->request->post["params"];
+    } elseif (isset($this->request->get["params"])) {
+        $params = $this->request->get["params"];
     } else {
+        $params = file_get_contents('php://input');
+    }
+
+    if (!$params) {
+        $this->log->write("24pay NURL: missing notification params");
         echo "Invalid notification params";
         die();
     }
 
     $twentyfourpay_notification = $this->parseNotification($params);
 
-    if (!$twentyfourpay_notification['Valid']){
+    if (empty($twentyfourpay_notification['Valid'])){
+        $this->log->write("24pay NURL: invalid gateway signature");
         die("Invalid response from 24pay gateway");
-        print_r($twentyfourpay_notification);
     }
 
     $this->load->model('checkout/order');
@@ -231,7 +259,7 @@ class ControllerExtensionPaymentTwentyfourpay extends Controller {
     $result = $twentyfourpay_notification['Result'];
     $transaction_id = $twentyfourpay_notification['PspTxnId'];
 
-    $this->log->write("Webhook received: $postData");
+    $this->log->write("24pay NURL received for order_id: " . $order_id . ", result: " . $result);
 
     $this->load->model('checkout/order');
 
@@ -254,7 +282,7 @@ class ControllerExtensionPaymentTwentyfourpay extends Controller {
   }
 
   private function parseNotification($params){
-            if (get_magic_quotes_gpc())
+            if (function_exists('get_magic_quotes_gpc') && get_magic_quotes_gpc())
                 $params = stripslashes($params);
 
             $params = trim(preg_replace("/^\s*<\?xml.*?\?>/i", "", $params));
@@ -296,6 +324,7 @@ class ControllerExtensionPaymentTwentyfourpay extends Controller {
                     $result['Valid'] = true;
                 }
                 else{
+                    $result['Valid'] = false;
                     $result['ValidSign'] = $signCandidate;
                 }
             }
